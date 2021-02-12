@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/labstack/echo"
@@ -80,43 +79,15 @@ func query(info *VideoInfo) {
 	// fmt.Println("id: ", info.id, "\nauthor: ", author, "\nurl: ", url)
 }
 
-type Config struct {
-	User     string `json:"user"`
-	Password string `json:"password"`
-	Ip       string `json:"ip"`
-	Port     string `json:"port"`
-	Db       string `json:"db"`
-}
-
-// 读取配置信息
-func readConfig() {
-	file, _ := os.Open("config.json")
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	conf := Config{}
-	err := decoder.Decode(&conf)
-	if err != nil {
-		fmt.Println("Error:", err)
-	}
-	fmt.Println("数据库配置信息： ", conf.User)
-}
-
-// e.GET("/users/:id", getUser)
-func getUser(c echo.Context) error {
-	// User ID 来自于url `users/:id`
-	id := c.Param("id")
-	return c.String(http.StatusOK, id)
-}
-
 func main() {
 	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
-	})
+	// e.GET("/", func(c echo.Context) error {
+	// 	return c.String(http.StatusOK, "Hello, World!")
+	// })
 
-	e.GET("/users/:id", getUser)
+	conf := Config{}
+	ReadConfig(&conf)
 
-	readConfig()
 	e.GET("/query", getUrl)
 
 	e.Logger.Fatal(e.Start(":9279"))
