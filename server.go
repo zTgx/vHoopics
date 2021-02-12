@@ -1,19 +1,19 @@
 package main
 
 import (
-	"fmt"
-    "net/http"
 	"encoding/json"
+	"fmt"
 	"math/rand"
-    "time"
+	"net/http"
+	"os"
+	"time"
 
+	"github.com/labstack/echo"
 
-    "github.com/labstack/echo"
+	"database/sql"
 
-    "database/sql"
-    _ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql"
 )
-
 
 const (
 	mysql_user   = "root"
@@ -24,9 +24,9 @@ const (
 )
 
 type VideoInfo struct {
-	Id int `json:"index"`
+	Id     int    `json:"index"`
 	Author string `json:"author"`
-	Url string `json:"url"`
+	Url    string `json:"url"`
 }
 
 func getUrl(c echo.Context) error {
@@ -37,11 +37,11 @@ func getUrl(c echo.Context) error {
 	// fmt.Println("id: ", info.Id, "\nauthor: ", info.Author, "\nurl: ", info.Url)
 
 	jsonBytes, err := json.Marshal(&info)
-    if err != nil {
-        fmt.Println(err)
-    }
+	if err != nil {
+		fmt.Println(err)
+	}
 
-    return c.String(http.StatusOK, string(jsonBytes))	
+	return c.String(http.StatusOK, string(jsonBytes))
 }
 
 func query(info *VideoInfo) {
@@ -80,23 +80,44 @@ func query(info *VideoInfo) {
 	// fmt.Println("id: ", info.id, "\nauthor: ", author, "\nurl: ", url)
 }
 
+type Config struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Ip       string `json:"ip"`
+	Port     string `json:"port"`
+	Db       string `json:"db"`
+}
+
+// 读取配置信息
+func readConfig() {
+	file, _ := os.Open("config.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	conf := Config{}
+	err := decoder.Decode(&conf)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	fmt.Println("数据库配置信息： ", conf.User)
+}
 
 // e.GET("/users/:id", getUser)
 func getUser(c echo.Context) error {
-    // User ID 来自于url `users/:id`
-    id := c.Param("id")
-    return c.String(http.StatusOK, id)
+	// User ID 来自于url `users/:id`
+	id := c.Param("id")
+	return c.String(http.StatusOK, id)
 }
 
 func main() {
-    e := echo.New()
-    e.GET("/", func(c echo.Context) error {
-        return c.String(http.StatusOK, "Hello, World!")
-    })
+	e := echo.New()
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, World!")
+	})
 
-    e.GET("/users/:id", getUser)
+	e.GET("/users/:id", getUser)
 
-    e.GET("/query", getUrl)
+	readConfig()
+	e.GET("/query", getUrl)
 
-    e.Logger.Fatal(e.Start(":9279"))
+	e.Logger.Fatal(e.Start(":9279"))
 }
