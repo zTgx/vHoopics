@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/labstack/echo"
@@ -14,18 +15,34 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-const (
-	mysql_user   = "root"
-	mysql_passwd = "111111"
-	mysql_ip     = "127.0.0.1"
-	mysql_port   = "3306"
-	mysql_qyDB   = "vhoopics"
-)
-
 type VideoInfo struct {
 	Id     int    `json:"index"`
 	Author string `json:"author"`
 	Url    string `json:"url"`
+}
+
+// 配置信息数据结构
+type Config struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Ip       string `json:"ip"`
+	Port     string `json:"port"`
+	Db       string `json:"db"`
+}
+
+var cfg = Config{}
+
+// 读取配置信息
+func ReadConfig(conf *Config) {
+	file, _ := os.Open("config.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	// conf := Config{}
+	err := decoder.Decode(&conf)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	// fmt.Println("数据库配置信息： ", conf.User)
 }
 
 func getUrl(c echo.Context) error {
@@ -44,6 +61,12 @@ func getUrl(c echo.Context) error {
 }
 
 func query(info *VideoInfo) {
+	mysql_user := cfg.User
+	mysql_passwd := cfg.Password
+	mysql_ip := cfg.Ip
+	mysql_port := cfg.Port
+	mysql_qyDB := cfg.Db
+
 	//打开数据库
 	db, errOpen := sql.Open("mysql", mysql_user+":"+mysql_passwd+"@tcp("+mysql_ip+":"+mysql_port+")/"+mysql_qyDB+"?charset=utf8")
 	if errOpen != nil {
@@ -85,8 +108,8 @@ func main() {
 	// 	return c.String(http.StatusOK, "Hello, World!")
 	// })
 
-	conf := Config{}
-	ReadConfig(&conf)
+	// conf := Config{}
+	ReadConfig(&cfg)
 
 	e.GET("/query", getUrl)
 
